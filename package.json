@@ -12,6 +12,7 @@
     "babel-core": "^6.24.0",
     "babel-loader": "^6.4.1",
     "babel-preset-es2015": "^6.24.0",
-    "pubnub": "^4.5.0"
+    "pubnub": "^4.5.0",
+    "serialport": "^4.0.7"
   }
 }

@@ -1,7 +1,6 @@
-import pubnub from 'pubnub'
-
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
+let gameGoing = false;
 
 class Ball {
   constructor(x, y, width, height) {
@@ -28,10 +27,11 @@ class Ball {
     else if(this.xDirection === 'left')
       this.x -= 1;
 
-    if(this.xDirection === 'up')
+    if(this.yDirection === 'up') {
       this.y -= 1;
-    else if(this.yDirection == 'down')
+    } else if(this.yDirection == 'down') {
       this.y += 1;
+    }
   }
 }
 
@@ -57,9 +57,9 @@ const player = new Paddle(0, canvas.width / 2 - 150, 20, 100);
 const enemy = new Paddle(canvas.width - 20, canvas.width / 2 - 150, 20, 100);
 
 function collide() {
-  if(ball.x + 30 > enemy.x) {
+  if(ball.x + 30 > player.x && player.y - 15 > ball.y && player.y - 50 < ball.y) {
     ball.xDirection = 'left';
-    if(this.y - 15 > 100 / 2) {
+    if(ball.y - 15 > 100 / 2) {
       ball.yDirection = 'up';
     } else {
       ball.yDirection = 'down';
@@ -81,12 +81,13 @@ function collide() {
 
   if(ball.y + 30 > canvas.height) {
     console.log(ball.yDirection);
+    console.log('panda');
     ball.yDirection = 'up';
   }
-}
 
-function movePlayer() {
-
+  if(ball.y < 0) {
+    ball.yDirection = 'down';
+  }
 }
 
 pubnub = new PubNub({
@@ -94,26 +95,39 @@ pubnub = new PubNub({
   subscribeKey : 'sub-c-cfaa271a-119f-11e7-b568-0619f8945a4f'
 })
 
+let lastMove = null;
 pubnub.addListener({
   status: function(statusEvent) {
     if (statusEvent.category === "PNConnectedCategory") {
-      publishSampleMessage();
     }
   },
   message: function(message) {
-    console.log("New Message!!", message);
+    if(player.y - 100 > 0 && player.y > 0 && player.y + 100 > canvas.height) {
+      if(message.message === 1) {
+        player.y -= 25
+      } else {
+        player.y += 25
+      }
+    }
+    if(message.message === 3) {
+      gameGoing = true;
+    }
   },
 });
 pubnub.subscribe({
   channels: ['pong']
 });
 
+gameGoing = true
+
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ball.draw();
-  player.draw();
-  enemy.draw();
-  collide();
+  if(gameGoing) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ball.draw();
+    player.draw();
+    enemy.draw();
+    collide();
+  }
 }
 
 setInterval(draw, 10);
